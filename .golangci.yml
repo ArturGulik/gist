@@ -1,0 +1,23 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - misspell
+    - unconvert
+  settings:
+    errcheck:
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintln
+        - fmt.Fprintf
+        - (io.Writer).Write
+        - (*os.File).Write
+        - (*os.File).Close
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
