@@ -1,0 +1,5 @@
+/gist
+*.test
+/dist/
+.claude/settings.local.json
+CLAUDE.md

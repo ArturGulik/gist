@@ -1,0 +1,7 @@
+⚠ rebase in progress
+   main
+↑1 feature
+  2 stash
+───────────────────
+ M render.go
+?? newfile.txt

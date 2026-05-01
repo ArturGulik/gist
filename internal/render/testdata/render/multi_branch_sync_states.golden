@@ -1,0 +1,6 @@
+     main
+↑2   ahead-only
+↓3   behind-only
+↑1↓1 diverged
+↑1   feature
+◦    no-upstream
