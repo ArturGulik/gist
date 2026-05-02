@@ -102,7 +102,15 @@ func run(a *app.App, args []string) error {
 		printLegend(a)
 		return nil
 	case "version", "--version", "-v":
-		fmt.Fprintf(a.Out, "gist %s (%s, %s)\n", version, commit, date)
+		// `go install <module>@<version>` builds from a proxy-served source
+		// zip that has no `.git`, so the toolchain can't populate vcs.revision
+		// or vcs.time. In that case print the version on its own rather than
+		// the noisy "(none, unknown)" parenthetical.
+		if commit == "none" || date == "unknown" {
+			fmt.Fprintf(a.Out, "gist %s\n", version)
+		} else {
+			fmt.Fprintf(a.Out, "gist %s (%s, %s)\n", version, commit, date)
+		}
 		return nil
 	case "help", "--help", "-h":
 		printHelp(a)

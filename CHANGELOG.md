@@ -4,6 +4,11 @@ All notable changes to **gist** are documented here. Format: [Keep a Changelog](
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-05-02
+
+### Fixed
+- `gist version` now prints `gist <version>` cleanly when commit/date metadata is missing — e.g. `go install …@v1.0.2` builds, where the proxy-served source zip has no `.git` for the Go toolchain to read VCS metadata from. Goreleaser archives and `make install` builds keep the full `gist <version> (<sha>, <date>)` format.
+
 ## [1.0.1] - 2026-05-02
 
 First effective public release.
