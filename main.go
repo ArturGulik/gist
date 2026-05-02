@@ -10,6 +10,7 @@ import (
 	"github.com/ArturGulik/gist/internal/ansi"
 	"github.com/ArturGulik/gist/internal/app"
 	"github.com/ArturGulik/gist/internal/branch"
+	"github.com/ArturGulik/gist/internal/completion"
 	"github.com/ArturGulik/gist/internal/config"
 	"github.com/ArturGulik/gist/internal/git"
 	"github.com/ArturGulik/gist/internal/remote"
@@ -84,15 +85,15 @@ func run(a *app.App, args []string) error {
 		cmd = args[0]
 	}
 	switch cmd {
-	case "status", "s":
+	case "status":
 		return render.RunStatus(a, nil)
-	case "update", "u":
+	case "update":
 		return update.RunUpdate(a, nil)
-	case "branch", "b":
+	case "branch":
 		return branch.RunBranch(a, args[1:])
-	case "switch", "sw":
+	case "switch":
 		return branch.RunSwitch(a, args[1:])
-	case "remote", "r":
+	case "remote":
 		if len(args) > 1 {
 			return git.Passthrough(append([]string{"remote"}, args[1:]...))
 		}
@@ -101,7 +102,9 @@ func run(a *app.App, args []string) error {
 		return update.RunFetch(a, args[1:])
 	case "config":
 		return a.RunConfig(nil)
-	case "legend", "l":
+	case "completion":
+		return completion.Run(a, args[1:])
+	case "legend":
 		printLegend(a)
 		return nil
 	case "version", "--version", "-v":

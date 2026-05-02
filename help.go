@@ -17,12 +17,13 @@ Usage:
   gist switch …        git switch, then print a status line for the new branch
   gist update          Refresh PR/MR cache (GitHub via gh, GitLab via glab)
   gist config          Print the fully-documented default config to stdout
+  gist completion …    Print, install, or uninstall shell completion.
+                       `+"`gist completion install [--alias=git]`"+` drops
+                       the file in the right place; `+"`uninstall`"+` undoes it.
   gist legend          Explain the symbols used by status
   gist version         Print version
   gist help            Print this help
   gist <cmd> …         Any other command is passed through to git
-
-Aliases: s=status, b=branch, sw=switch, u=update, l=legend, r=remote
 
 Env:
   NO_COLOR        Disable color output

@@ -56,6 +56,24 @@ Or keep `git` and add a single `git st` entry point:
 git config --global alias.st '!gist'
 ```
 
+### Shell completion
+
+`make install` sets this up automatically. For other install methods, run:
+
+```sh
+gist completion install                  # detects $SHELL, drops the file
+gist completion install --alias=git      # also wraps `git` so `git up<TAB>` finds `update`
+gist completion uninstall                # removes the file and any rc block
+```
+
+The base completion lands at an auto-loaded path — no rcfile edit needed.
+`--alias=git` additionally appends a delimited block to your
+`.bashrc`/`.zshrc`; re-running the install command updates that block in
+place, and `uninstall` strips it back out.
+
+If you'd rather wire it up by hand, `gist completion bash` and `gist
+completion zsh` print the script to stdout (also accept `--alias=git`).
+
 ## Usage
 
 ```
@@ -70,8 +88,6 @@ gist config     print the fully-commented default config
 gist help       full help with every config key + default
 gist <cmd> …    anything else → forwarded to git
 ```
-
-Aliases: `s` `b` `sw` `u` `l` `r`.
 
 ## PR / MR state
 

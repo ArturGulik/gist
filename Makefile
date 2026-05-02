@@ -20,10 +20,12 @@ all: build
 build: ## Build the binary into the project root
 	$(GO) build -ldflags '$(LDFLAGS)' -o $(BINARY) .
 
-install: ## Build and install to $(BINDIR)
+install: ## Build and install to $(BINDIR), plus shell completions
 	@mkdir -p $(BINDIR)
 	$(GO) build -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(BINARY) .
 	@echo "installed $(BINDIR)/$(BINARY)"
+	@$(BINDIR)/$(BINARY) completion install --shell=bash 2>/dev/null || true
+	@$(BINDIR)/$(BINARY) completion install --shell=zsh  2>/dev/null || true
 
 test: ## Run tests
 	$(GO) test ./...
