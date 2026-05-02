@@ -77,7 +77,7 @@ func RunUpdate(a *app.App, _ []string) error {
 		return nil
 	}
 
-	f := detectForge()
+	f, _ := detectForge()
 	if f == nil {
 		fmt.Fprintln(a.Err, "gist: remote is not GitHub or GitLab; skipping PR/MR refresh")
 		return nil
@@ -106,19 +106,38 @@ func RunUpdate(a *app.App, _ []string) error {
 	return WriteCache(cache)
 }
 
-// detectForge inspects the origin remote URL to identify the hosting forge.
-func detectForge() forge {
-	url, err := git.Run("remote", "get-url", "origin")
+// detectForge inspects remote URLs to identify the hosting forge, returning
+// the matched forge and the URL it was matched from. origin is checked first;
+// other remotes (upstream, github, etc.) are checked in the order git lists
+// them so users who name their forge remote anything else still get PR/MR
+// refresh and web-URL resolution.
+func detectForge() (forge, string) {
+	out, err := git.Run("remote")
 	if err != nil {
-		return nil
+		return nil, ""
 	}
-	switch {
-	case strings.Contains(url, "github.com"):
-		return githubForge{}
-	case strings.Contains(url, "gitlab"):
-		return gitlabForge{}
+	names := strings.Split(strings.TrimSpace(out), "\n")
+	ordered := make([]string, 0, len(names))
+	for _, n := range names {
+		if n = strings.TrimSpace(n); n == "origin" {
+			ordered = append([]string{n}, ordered...)
+		} else if n != "" {
+			ordered = append(ordered, n)
+		}
 	}
-	return nil
+	for _, name := range ordered {
+		url, err := git.Run("remote", "get-url", name)
+		if err != nil {
+			continue
+		}
+		switch {
+		case strings.Contains(url, "github.com"):
+			return githubForge{}, url
+		case strings.Contains(url, "gitlab"):
+			return gitlabForge{}, url
+		}
+	}
+	return nil, ""
 }
 
 type githubForge struct{}
@@ -262,12 +281,8 @@ var prURLCache struct {
 func PRWebURL(n int) string {
 	if !prURLCache.resolved {
 		prURLCache.resolved = true
-		f := detectForge()
+		f, raw := detectForge()
 		if f == nil {
-			return ""
-		}
-		raw, err := git.Run("remote", "get-url", "origin")
-		if err != nil {
 			return ""
 		}
 		prURLCache.base = git.WebURL(raw)
