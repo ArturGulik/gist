@@ -87,14 +87,17 @@ func DetectColor() bool {
 }
 
 // VisibleWidth returns the printed width of s in cells, skipping ANSI escape
-// sequences. Recognizes CSI (ESC [ ... final) and bare two-byte ESC sequences;
-// terminates CSI on any byte in the ECMA-48 final-byte range (0x40–0x7E),
-// which covers letters, '~', '@', etc. Assumes single-width runes.
+// sequences. Recognizes CSI (ESC [ ... final), OSC (ESC ] ... ST/BEL — used
+// by OSC 8 hyperlinks), and bare two-byte ESC sequences; terminates CSI on
+// any byte in the ECMA-48 final-byte range (0x40–0x7E). Assumes single-width
+// runes.
 func VisibleWidth(s string) int {
 	const (
 		stNormal = iota
 		stEsc    // saw ESC, awaiting introducer
 		stCSI    // inside CSI params/intermediates, awaiting final
+		stOSC    // inside OSC payload, awaiting ST (ESC \) or BEL
+		stOSCEsc // saw ESC inside OSC; next byte completes ST
 	)
 	n, state := 0, stNormal
 	for _, r := range s {
@@ -106,9 +109,12 @@ func VisibleWidth(s string) int {
 			}
 			n++
 		case stEsc:
-			if r == '[' {
+			switch r {
+			case '[':
 				state = stCSI
-			} else {
+			case ']':
+				state = stOSC
+			default:
 				// Bare two-byte ESC sequence (e.g. ESC c). Done.
 				state = stNormal
 			}
@@ -116,6 +122,15 @@ func VisibleWidth(s string) int {
 			if r >= 0x40 && r <= 0x7E {
 				state = stNormal
 			}
+		case stOSC:
+			switch r {
+			case '\x07':
+				state = stNormal
+			case '\x1b':
+				state = stOSCEsc
+			}
+		case stOSCEsc:
+			state = stNormal
 		}
 	}
 	return n

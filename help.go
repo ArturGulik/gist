@@ -11,8 +11,10 @@ func printHelp(a *app.App) {
 
 Usage:
   gist [status]        Show branches and working-tree state (default)
-  gist branch [<br>]   Detailed info for a branch (default: current)
+  gist branch          Detailed info for the current branch
+  gist branch …        Pass through to git branch
   gist remote          Show remotes with clickable web URLs
+  gist remote …        Pass through to git remote
   gist fetch …         git fetch, then refresh PR/MR cache
   gist switch …        git switch, then print a status line for the new branch
   gist update          Refresh PR/MR cache (GitHub via gh, GitLab via glab)

@@ -6,17 +6,19 @@
 A drop-in `git` superset. Better defaults, smarter wrappers, transparent passthrough — `alias git=gist` and forget about it.
 
 ```
-  main                       e956f1b             Merge hotfix/login
-  feature/payments-checkout  13a578d  ↑2 #87     Wire up Stripe webhooks
-  hotfix/login               7150cc9             Fix redirect loop
-  i18n/translations          560787b             Add German strings
-  scratchpad                 e11597a  ◦          Trying out a thing
-* feature/auth-flow          594d6e9  ↑1↓1 ~92   Refactor token refresh
-  ⇣ remote-feature           a3b2c1d             Feature only on remote
+  main
+  feature/payments-checkout  #87 ↑2
+  hotfix/login
+  i18n/translations
+  scratchpad                 ◦
+* feature/auth-flow          ~92 ↑1↓1
+  ⇣ remote-feature
   1 stash
 ───────────────────
 ?? newfile.txt
 ```
+
+Defaults are minimal — branch + sync + PR. Commit subject, hash, and relative date are opt-in columns (`status.show-subject`, `show-hash`, `show-date`); `gist config` shows every knob.
 
 - **Every branch, one screen.** Bare `gist` is a multi-branch status — ahead/behind, stashes, working tree, in-progress merges — sub-100ms.
 - **PR/MR state inline.** Number + status from GitHub & GitLab, cached locally. No live network calls on the hot path.
@@ -78,7 +80,7 @@ completion zsh` print the script to stdout (also accept `--alias=git`).
 
 ```
 gist [status]   all branches + working-tree at a glance (default)
-gist branch …   detailed view for one branch
+gist branch     detailed view for the current branch
 gist switch …   git switch + status for the new branch
 gist fetch …    git fetch + refresh PR/MR cache
 gist update     refresh PR/MR cache only (uses gh / glab)

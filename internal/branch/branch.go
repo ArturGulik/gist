@@ -13,7 +13,7 @@ import (
 	"github.com/ArturGulik/gist/internal/update"
 )
 
-func RunBranch(a *app.App, args []string) error {
+func RunBranch(a *app.App, _ []string) error {
 	if !git.InWorkTree() {
 		fmt.Fprintln(a.Out, "not a git repository")
 		return nil
@@ -24,15 +24,8 @@ func RunBranch(a *app.App, args []string) error {
 	}
 
 	name := git.CurrentBranch()
-	if len(args) > 0 {
-		name = args[0]
-	}
 	if name == "" {
-		fmt.Fprintln(a.Err, "gist branch: detached HEAD — specify a branch name")
-		return nil
-	}
-	if _, err := git.Run("show-ref", "--verify", "--quiet", "refs/heads/"+name); err != nil {
-		fmt.Fprintf(a.Err, "gist branch: %q not found\n", name)
+		fmt.Fprintln(a.Err, "gist branch: detached HEAD")
 		return nil
 	}
 

@@ -90,7 +90,10 @@ func run(a *app.App, args []string) error {
 	case "update":
 		return update.RunUpdate(a, nil)
 	case "branch":
-		return branch.RunBranch(a, args[1:])
+		if len(args) > 1 {
+			return git.Passthrough(args)
+		}
+		return branch.RunBranch(a, nil)
 	case "switch":
 		return branch.RunSwitch(a, args[1:])
 	case "remote":

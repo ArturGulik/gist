@@ -18,6 +18,12 @@ func TestVisibleWidth(t *testing.T) {
 		{"\x1b[200~paste\x1b[201~", 5},
 		// Bare two-byte ESC sequence.
 		{"\x1bcabc", 3},
+		// OSC 8 hyperlink (ST = ESC \) — pre-fix the URL leaked as visible.
+		{"\x1b]8;;https://example.com\x1b\\link\x1b]8;;\x1b\\", 4},
+		// OSC terminated by BEL.
+		{"\x1b]0;title\x07x", 1},
+		// Hyperlinked text plus following plain content.
+		{"\x1b]8;;u\x1b\\ab\x1b]8;;\x1b\\ cd", 5},
 	}
 	for _, c := range cases {
 		if got := VisibleWidth(c.in); got != c.want {

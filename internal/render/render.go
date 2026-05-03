@@ -60,11 +60,18 @@ func (r *Renderer) Status(s *model.RepoState) error {
 
 	sortBranches(s.Branches, s.DefaultBranch)
 
-	// Pre-compute per-column widths so the optional columns line up.
-	indW, hashW, dateW := 0, 0, 0
+	// Pre-compute per-column widths so the optional columns line up. The
+	// indicator splits into PR and sync sub-columns padded independently —
+	// keeps the sync glyph (e.g. `⇣`) aligned across rows even when this
+	// row has no PR segment.
+	prW, syncW, hashW, dateW := 0, 0, 0, 0
 	for _, b := range s.Branches {
-		if n := ansi.VisibleWidth(r.indicator(b)); n > indW {
-			indW = n
+		pr, sync := r.indicatorParts(b)
+		if n := ansi.VisibleWidth(pr); n > prW {
+			prW = n
+		}
+		if n := ansi.VisibleWidth(sync); n > syncW {
+			syncW = n
 		}
 		if cfg.Status.ShowHash && len(b.Hash) > hashW {
 			hashW = len(b.Hash)
@@ -88,7 +95,7 @@ func (r *Renderer) Status(s *model.RepoState) error {
 	}
 
 	for _, b := range s.Branches {
-		r.branchRow(b, indW, nameW, hashW, dateW)
+		r.branchRow(b, prW, syncW, nameW, hashW, dateW)
 	}
 
 	if s.StashCount > 0 && cfg.Sections.Stash {
@@ -106,7 +113,7 @@ func (r *Renderer) Status(s *model.RepoState) error {
 // Branch renders a single branch row at natural width — used by `gist switch`
 // to print a status line for the resulting branch.
 func (r *Renderer) Branch(b model.Branch) {
-	r.branchRow(b, 0, 0, 0, 0)
+	r.branchRow(b, 0, 0, 0, 0, 0)
 }
 
 // sortBranches puts the default branch first, then local branches
@@ -131,7 +138,7 @@ func sortBranches(bs []model.Branch, defaultBranch string) {
 	})
 }
 
-func (r *Renderer) branchRow(b model.Branch, indW, nameW, hashW, dateW int) {
+func (r *Renderer) branchRow(b model.Branch, prW, syncW, nameW, hashW, dateW int) {
 	cfg := r.cfg
 	nameStyled := b.Name
 	switch {
@@ -150,10 +157,7 @@ func (r *Renderer) branchRow(b model.Branch, indW, nameW, hashW, dateW int) {
 		nameStyled = r.pen.Apply(cfg.Colors.BranchPRMerged, b.Name)
 	}
 
-	ind := r.indicator(b)
-	if pad := indW - ansi.VisibleWidth(ind); pad > 0 {
-		ind += strings.Repeat(" ", pad)
-	}
+	ind := r.buildIndicator(b, prW, syncW)
 
 	// Pad the branch name itself so optional columns to the right align.
 	if nameW > 0 {
@@ -189,27 +193,46 @@ func (r *Renderer) branchRow(b model.Branch, indW, nameW, hashW, dateW int) {
 	fmt.Fprintln(r.out, strings.Join(parts, " "))
 }
 
-// indicator composes the pre-name status column from independent segments.
-// Each segment function returns "" when it has nothing to say.
-func (r *Renderer) indicator(b model.Branch) string {
+// indicatorParts returns the two independent sub-columns of the pre-name
+// status indicator: the PR segment and the sync (or remote-only) segment.
+// Either may be "". Returned separately so multi-row rendering can pad each
+// column independently and keep the sync glyph aligned across rows.
+func (r *Renderer) indicatorParts(b model.Branch) (pr, sync string) {
 	cfg := r.cfg
-	segs := []string{
-		r.PRSegment(b),
-		r.syncSegment(b),
-	}
+	pr = r.PRSegment(b)
 	if b.IsRemoteOnly {
-		segs = []string{
-			r.PRSegment(b),
-			r.pen.Apply(cfg.Colors.BranchRemoteOnly, cfg.Symbols.RemoteOnly),
-		}
+		sync = r.pen.Apply(cfg.Colors.BranchRemoteOnly, cfg.Symbols.RemoteOnly)
+		return
 	}
-	out := make([]string, 0, len(segs))
-	for _, s := range segs {
-		if s != "" {
-			out = append(out, s)
+	sync = r.syncSegment(b)
+	return
+}
+
+// buildIndicator assembles the indicator for one row. A sub-column with
+// width > 0 is right-padded to that width so its glyph aligns vertically
+// across rows; a sub-column with width 0 is omitted entirely. The natural-
+// width form (both 0, used by `gist switch`) space-separates non-empty
+// segments and emits nothing when the row has no indicator.
+func (r *Renderer) buildIndicator(b model.Branch, prW, syncW int) string {
+	pr, sync := r.indicatorParts(b)
+	parts := make([]string, 0, 2)
+	if prW > 0 {
+		if pad := prW - ansi.VisibleWidth(pr); pad > 0 {
+			pr += strings.Repeat(" ", pad)
 		}
+		parts = append(parts, pr)
+	} else if pr != "" {
+		parts = append(parts, pr)
 	}
-	return strings.Join(out, " ")
+	if syncW > 0 {
+		if pad := syncW - ansi.VisibleWidth(sync); pad > 0 {
+			sync += strings.Repeat(" ", pad)
+		}
+		parts = append(parts, sync)
+	} else if sync != "" {
+		parts = append(parts, sync)
+	}
+	return strings.Join(parts, " ")
 }
 
 // PRSegment renders PR state (if any) as #N / ✓N / ×N. If
