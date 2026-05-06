@@ -87,6 +87,8 @@ func TestRender(t *testing.T) {
 						PRNumber: 92, PRState: "open", PRIsDraft: true},
 					{Name: "merged-pr", Hash: "560787b", Upstream: "origin/merged-pr",
 						PRNumber: 81, PRState: "merged"},
+					{Name: "merged-pr-deleted", Hash: "a1b2c3d", Upstream: "origin/merged-pr-deleted",
+						PRNumber: 79, PRState: "merged", PRHeadDeleted: true},
 					{Name: "closed-pr", Hash: "139e828", Upstream: "origin/closed-pr",
 						PRNumber: 73, PRState: "closed"},
 				},
@@ -132,6 +134,21 @@ func TestRender(t *testing.T) {
 				c.Status.ShowHash = true
 				c.Status.ShowDate = true
 				c.Status.ShowSubject = true
+			},
+		},
+		{
+			name:  "with_prs_colored",
+			color: true,
+			state: model.RepoState{
+				DefaultBranch: "main",
+				CurrentBranch: "main",
+				Branches: []model.Branch{
+					{Name: "main", Hash: "e956f1b", IsDefault: true, IsCurrent: true, Upstream: "origin/main"},
+					{Name: "merged-pr", Hash: "560787b", Upstream: "origin/merged-pr",
+						PRNumber: 81, PRState: "merged"},
+					{Name: "merged-pr-deleted", Hash: "a1b2c3d", Upstream: "origin/merged-pr-deleted",
+						PRNumber: 79, PRState: "merged", PRHeadDeleted: true},
+				},
 			},
 		},
 		{

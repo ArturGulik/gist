@@ -154,7 +154,11 @@ func (r *Renderer) branchRow(b model.Branch, prW, syncW, nameW, hashW, dateW int
 	case b.IsRemoteOnly:
 		nameStyled = r.pen.Apply(cfg.Colors.BranchRemoteOnly, b.Name)
 	case b.PRState == "merged":
-		nameStyled = r.pen.Apply(cfg.Colors.BranchPRMerged, b.Name)
+		if b.PRHeadDeleted {
+			nameStyled = r.pen.Apply(cfg.Colors.BranchGone, b.Name)
+		} else {
+			nameStyled = r.pen.Apply(cfg.Colors.BranchPRMerged, b.Name)
+		}
 	}
 
 	ind := r.buildIndicator(b, prW, syncW)

@@ -148,6 +148,7 @@ func ApplyPRCache(branches []model.Branch) {
 			branches[i].PRNumber = info.Number
 			branches[i].PRState = info.State
 			branches[i].PRIsDraft = info.IsDraft
+			branches[i].PRHeadDeleted = info.HeadDeleted
 		}
 	}
 }

@@ -15,19 +15,21 @@ import (
 
 // CacheEntry is the on-disk shape per branch.
 type CacheEntry struct {
-	Number  int    `json:"number"`
-	State   string `json:"state"` // "open" | "merged" | "closed"
-	IsDraft bool   `json:"isDraft,omitempty"`
+	Number      int    `json:"number"`
+	State       string `json:"state"` // "open" | "merged" | "closed"
+	IsDraft     bool   `json:"isDraft,omitempty"`
+	HeadDeleted bool   `json:"headDeleted,omitempty"` // remote branch no longer exists
 }
 
 // forge abstracts a hosting provider that exposes pull/merge requests through
 // a local CLI. New providers (Bitbucket, Gitea, …) implement this interface.
 // Methods stay package-private; only update's own functions consume them.
 type forge interface {
-	cli() string                 // executable name on PATH
-	label() string               // singular noun for messages: "PR" / "MR"
-	prPathFmt() string           // appended to the project web URL: "/pull/%d", "/-/merge_requests/%d"
-	list() ([]forgeEntry, error) // entries keyed by source/head branch
+	cli() string                       // executable name on PATH
+	label() string                     // singular noun for messages: "PR" / "MR"
+	prPathFmt() string                 // appended to the project web URL: "/pull/%d", "/-/merge_requests/%d"
+	list() ([]forgeEntry, error)       // entries keyed by source/head branch
+	existingBranches() map[string]bool // currently-live branch names; nil = unavailable
 }
 
 // forgeEntry is the cross-forge intermediate before dedup. State and Number
@@ -102,6 +104,16 @@ func RunUpdate(a *app.App, _ []string) error {
 		}
 		cache[e.branch] = e.entry
 	}
+
+	if remote := f.existingBranches(); remote != nil {
+		for branch, entry := range cache {
+			if entry.State == "merged" && !remote[branch] {
+				entry.HeadDeleted = true
+				cache[branch] = entry
+			}
+		}
+	}
+
 	fmt.Fprintf(a.Out, "gist: cached %d %ss\n", len(cache), f.label())
 	return WriteCache(cache)
 }
@@ -132,7 +144,8 @@ func detectForge() (forge, string) {
 		}
 		switch {
 		case strings.Contains(url, "github.com"):
-			return githubForge{}, url
+			repoPath := strings.TrimPrefix(git.WebURL(url), "https://github.com/")
+			return githubForge{repoPath: repoPath}, url
 		case strings.Contains(url, "gitlab"):
 			return gitlabForge{}, url
 		}
@@ -140,11 +153,34 @@ func detectForge() (forge, string) {
 	return nil, ""
 }
 
-type githubForge struct{}
+type githubForge struct{ repoPath string } // "owner/repo"
 
 func (githubForge) cli() string       { return "gh" }
 func (githubForge) label() string     { return "PR" }
 func (githubForge) prPathFmt() string { return "/pull/%d" }
+
+func (g githubForge) existingBranches() map[string]bool {
+	if g.repoPath == "" {
+		return nil
+	}
+	cmd := exec.Command("gh", "api",
+		"repos/"+g.repoPath+"/branches",
+		"--paginate",
+		"--jq", ".[].name")
+	var stdout bytes.Buffer
+	cmd.Stdout = &stdout
+	if err := cmd.Run(); err != nil {
+		return nil
+	}
+	branches := map[string]bool{}
+	for _, name := range strings.Split(strings.TrimSpace(stdout.String()), "\n") {
+		if name != "" {
+			branches[name] = true
+		}
+	}
+	return branches
+}
+
 func (githubForge) list() ([]forgeEntry, error) {
 	cmd := exec.Command("gh", "pr", "list",
 		"--state", "all",
@@ -175,6 +211,8 @@ func (githubForge) list() ([]forgeEntry, error) {
 }
 
 type gitlabForge struct{}
+
+func (gitlabForge) existingBranches() map[string]bool { return nil }
 
 func (gitlabForge) cli() string       { return "glab" }
 func (gitlabForge) label() string     { return "MR" }

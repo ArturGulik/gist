@@ -14,9 +14,10 @@ type Branch struct {
 	IsRemoteOnly bool // exists on origin only, no local ref
 	Subject      string
 	LastActivity string // committer date, relative (e.g. "2 days ago"); empty when not requested
-	PRNumber     int    // 0 if no associated PR on the remote
-	PRState      string // "open" | "merged" | "closed" | "" (no PR)
-	PRIsDraft    bool   // true if the PR is a draft
+	PRNumber      int    // 0 if no associated PR on the remote
+	PRState       string // "open" | "merged" | "closed" | "" (no PR)
+	PRIsDraft     bool   // true if the PR is a draft
+	PRHeadDeleted bool   // true when the PR is merged and the head branch no longer exists on the remote
 }
 
 // RepoState is the assembled input to the renderer. Collectors populate it;
