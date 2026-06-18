@@ -4,6 +4,17 @@ All notable changes to **gist** are documented here. Format: [Keep a Changelog](
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-06-19
+
+### Added
+- Shell completions (`gist completion bash|zsh`), including `--alias` so completion works when `gist` is aliased to `git`.
+
+### Fixed
+- `gist branch …` and `gist remote …` now pass their arguments through to `git` (e.g. `git branch -m` under an `alias git=gist`); only the bare `gist branch` / `gist remote` forms render gist's own views.
+- Merged PRs whose remote head branch was deleted now display correctly.
+- Forge detection works on any remote, not just `origin`.
+- `gist remote` view corrections.
+
 ## [1.0.2] - 2026-05-02
 
 ### Fixed
