@@ -190,7 +190,7 @@ func writable(dir string) bool {
 		return false
 	}
 	f.Close()
-	os.Remove(probe)
+	_ = os.Remove(probe)
 	return true
 }
 

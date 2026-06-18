@@ -292,7 +292,9 @@ func TestUninstall_BadShell(t *testing.T) {
 func TestUpsertRcBlock_ReplacesInPlace(t *testing.T) {
 	dir := t.TempDir()
 	rc := filepath.Join(dir, "rc")
-	os.WriteFile(rc, []byte("alpha\n"+rcDelim+"\nold-content\n"+rcDelim+"\nomega\n"), 0o644)
+	if err := os.WriteFile(rc, []byte("alpha\n"+rcDelim+"\nold-content\n"+rcDelim+"\nomega\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 
 	action, err := upsertRcBlock(rc, []string{"new-content"})
 	if err != nil {
