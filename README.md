@@ -1,6 +1,9 @@
 # gist — Git Instant State Tool
 
 [![CI](https://github.com/ArturGulik/gist/actions/workflows/ci.yml/badge.svg)](https://github.com/ArturGulik/gist/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/ArturGulik/gist.svg)](https://pkg.go.dev/github.com/ArturGulik/gist)
+[![Version](https://img.shields.io/github/v/tag/ArturGulik/gist?sort=semver&label=version&color=00ADD8)](CHANGELOG.md)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ArturGulik/gist)](https://goreportcard.com/report/github.com/ArturGulik/gist)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 A drop-in `git` superset. Better defaults, smarter wrappers, transparent passthrough — `alias git=gist` and forget about it.
@@ -18,11 +21,14 @@ A drop-in `git` superset. Better defaults, smarter wrappers, transparent passthr
 ?? newfile.txt
 ```
 
-Defaults are minimal — branch + sync + PR. Commit subject, hash, and relative date are opt-in columns (`status.show-subject`, `show-hash`, `show-date`); `gist config` shows every knob.
+## Quick start
 
-- **Every branch, one screen.** Bare `gist` is a multi-branch status — ahead/behind, stashes, working tree, in-progress merges — sub-100ms.
-- **PR/MR state inline.** Number + status from GitHub & GitLab, cached locally. No live network calls on the hot path.
-- **Wraps git, doesn't replace it.** Smarter `branch` / `switch` / `fetch` / `remote`; everything else passes straight through. Runs, prints, exits — no daemon, no TUI.
+```sh
+go install github.com/ArturGulik/gist@latest
+# ensure $(go env GOPATH)/bin (usually ~/go/bin) is on your $PATH
+gist completion install --alias=git
+# source ~/.bashrc  # or ~/.zshrc
+```
 
 ## Install
 
@@ -78,17 +84,23 @@ completion zsh` print the script to stdout (also accept `--alias=git`).
 
 ## Usage
 
-```
-gist [status]   all branches + working-tree at a glance (default)
-gist branch     detailed view for the current branch
-gist switch …   git switch + status for the new branch
-gist fetch …    git fetch + refresh PR/MR cache
-gist update     refresh PR/MR cache only (uses gh / glab)
-gist remote     remotes with clickable web URLs
-gist legend     explain the symbols
-gist config     print the fully-commented default config
-gist help       full help with every config key + default
-gist <cmd> …    anything else → forwarded to git
+```text
+gist [status]        Show branches and working-tree state (default)
+gist branch          Detailed info for the current branch
+gist branch …        Pass through to git branch
+gist remote          Show remotes with clickable web URLs
+gist remote …        Pass through to git remote
+gist fetch …         git fetch, then refresh PR/MR cache
+gist switch …        git switch, then print a status line for the new branch
+gist update          Refresh PR/MR cache (GitHub via gh, GitLab via glab)
+gist config          Print the fully-documented default config to stdout
+gist completion …    Print, install, or uninstall shell completion.
+                     `gist completion install [--alias=git]` drops
+                     the file in the right place; `uninstall` undoes it.
+gist legend          Explain the symbols used by status
+gist version         Print version
+gist help            Print this help
+gist <cmd> …         Any other command is passed through to git
 ```
 
 ## PR / MR state
